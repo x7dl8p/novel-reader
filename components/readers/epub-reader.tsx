@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { Book } from "epubjs"
+import type { Book, Rendition } from "epubjs"
 
 interface EpubReaderProps {
   file: File
@@ -13,102 +13,107 @@ interface EpubReaderProps {
 }
 
 export function EpubReader({ file, onChaptersFound, currentChapter, onAddBookmark }: EpubReaderProps) {
-  const [book, setBook] = useState<Book | null>(null)
-  const [rendition, setRendition] = useState<any>(null)
+  const readerRef = useRef<HTMLDivElement>(null)
+  const bookRef = useRef<Book | null>(null)
+  const renditionRef = useRef<Rendition | null>(null)
   const [loading, setLoading] = useState(true)
-  const viewerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const loadBook = async () => {
+    if (!file || !readerRef.current) return
+
+    let isMounted = true
+    const readerElement = readerRef.current
+
+    const loadEpub = async () => {
+      setLoading(true)
       try {
-        setLoading(true)
+        const EpubJS = (await import("epubjs")).default
 
-        // Import epubjs dynamically to avoid SSR issues
-        const epubjs = await import("epubjs")
-        const Book = epubjs.default
+        const fileReader = new FileReader()
+        fileReader.onload = async (event) => {
+          if (!event.target?.result || !isMounted) return
 
-        // Create a blob URL for the file
-        const url = URL.createObjectURL(file)
-        const newBook = Book(url)
+          const arrayBuffer = event.target.result as ArrayBuffer
 
-        await newBook.ready
-        setBook(newBook)
+          const newBook = EpubJS(arrayBuffer)
+          bookRef.current = newBook
 
-        // Get the table of contents
-        const navigation = await newBook.navigation
-        const toc = navigation.toc
+          await newBook.ready
 
-        // Format chapters for the navigation component
-        const chapters = toc.map((item: any) => ({
-          title: item.label,
-          href: item.href,
-        }))
+          if (!isMounted) return
 
-        onChaptersFound(chapters)
+          // Get the navigation content from the book
+          await newBook.loaded.navigation;
+          const toc = newBook.navigation.toc;
+          if (isMounted) {
+            onChaptersFound(toc.map((item) => ({ title: item.label.trim(), href: item.href })))
+          }
 
-        // Create rendition
-        if (viewerRef.current) {
-          const newRendition = newBook.renderTo(viewerRef.current, {
+          const newRendition = newBook.renderTo(readerElement, {
             width: "100%",
             height: "100%",
-            spread: "none",
+            flow: "paginated",
+            spread: "auto",
           })
+          renditionRef.current = newRendition
 
-          setRendition(newRendition)
+          await newRendition.display(currentChapter || undefined)
 
-          // Display the first page
-          await newRendition.display()
+          if (isMounted) {
+            newRendition.on("selected", async (cfiRange: string, contents: any) => {
+              const range = await newBook.getRange(cfiRange)
+              if (range) {
+                // You might want a button or context menu to trigger this
+                // onAddBookmark(cfiRange, range.toString().substring(0, 50) + "...");
+              }
+            })
+          }
         }
+
+        fileReader.onerror = (error) => {
+          if (isMounted) {
+            console.error("Error reading file:", error)
+            setLoading(false)
+          }
+        }
+
+        fileReader.readAsArrayBuffer(file)
       } catch (error) {
-        console.error("Error loading EPUB:", error)
+        if (isMounted) {
+          console.error("Error loading EPUB:", error)
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
-    loadBook()
+    loadEpub()
 
     return () => {
-      // Clean up
-      if (book) {
-        book.destroy()
-      }
+      isMounted = false
+      renditionRef.current?.destroy()
+      bookRef.current?.destroy()
+      renditionRef.current = null
+      bookRef.current = null
     }
-  }, [file, onChaptersFound])
+  }, [file])
 
-  // Handle chapter navigation
   useEffect(() => {
-    if (rendition && currentChapter) {
-      rendition.display(currentChapter)
+    if (renditionRef.current && currentChapter) {
+      renditionRef.current.display(currentChapter)
     }
-  }, [rendition, currentChapter])
-
-  const handleAddBookmark = () => {
-    if (rendition) {
-      const currentLocation = rendition.currentLocation()
-      const cfi = currentLocation.start.cfi
-      const chapter = book?.navigation?.get(currentLocation.start.href)
-      const title = chapter?.label || "Bookmark"
-
-      onAddBookmark(cfi, title)
-    }
-  }
+  }, [currentChapter])
 
   return (
-    <div className="relative h-full">
-      {loading ? (
-        <div className="flex items-center justify-center min-h-[50vh]">
+    <div className="relative w-full h-full">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
           <p>Loading EPUB...</p>
         </div>
-      ) : (
-        <>
-          <Button variant="ghost" size="icon" className="absolute top-0 right-0 z-10" onClick={handleAddBookmark}>
-            <Bookmark className="h-5 w-5" />
-            <span className="sr-only">Add bookmark</span>
-          </Button>
-          <div ref={viewerRef} className="epub-viewer h-[calc(100vh-200px)] overflow-hidden" />
-        </>
       )}
+      <div ref={readerRef} className="w-full h-full epub-container"></div>
     </div>
   )
 }

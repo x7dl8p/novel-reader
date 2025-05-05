@@ -37,18 +37,20 @@ export async function preloadDefaultFonts(): Promise<void> {
 
   try {
     // Load default fonts if they're not already loaded
-    const fontFamilies = ["Inter", "JetBrains Mono", "Merriweather", "Roboto", "Georgia"]
+    // Ensure font names match the @font-face definitions in globals.css
+    const fontFamilies = ["Inter", "JetBrains Mono", "Merriweather", "Roboto"]; // Removed Georgia as it wasn't in the initial request and might not exist locally
 
     for (const family of fontFamilies) {
       // Check if the font is already loaded
       const isLoaded = Array.from(document.fonts).some(
         (font) => font.family.replace(/["']/g, "") === family && font.status === "loaded",
-      )
+      );
 
       if (!isLoaded) {
-        // Load the font from our local files
-        await loadFont(family, `/public/fonts/${family.toLowerCase().replace(/\s+/g, "-")}.woff2`)
-        console.log(`Preloaded font: ${family}`)
+        // Correct the path: Files in /public are served from the root
+        const fontUrl = `/fonts/${family.toLowerCase().replace(/\s+/g, "-")}.woff2`;
+        await loadFont(family, fontUrl);
+        console.log(`Preloaded font: ${family}`);
       }
     }
   } catch (error) {
