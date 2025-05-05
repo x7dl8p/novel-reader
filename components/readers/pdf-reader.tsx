@@ -26,8 +26,7 @@ export function PdfReader({ file, onChaptersFound, currentChapter, onAddBookmark
         // Import PDF.js dynamically
         const pdfjs = await import("pdfjs-dist")
         // Set worker path
-        const pdfjsWorker = await import("pdfjs-dist/build/pdf.worker.entry")
-        pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker
+        pdfjs.GlobalWorkerOptions.workerSrc = `pdfjs-dist/build/pdf.worker.js`;
 
         // Load the PDF
         const url = URL.createObjectURL(file)

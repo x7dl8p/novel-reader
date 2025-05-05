@@ -6,6 +6,7 @@ import { FileOpener } from "@/components/file-opener"
 import { NoFileSelected } from "@/components/no-file-selected"
 
 export default function Home() {
+  console.log("Home component rendered");
   const [file, setFile] = useState<File | null>(null)
   const [fileType, setFileType] = useState<"text" | "epub" | "pdf" | null>(null)
 
