@@ -10,13 +10,26 @@ interface EpubReaderProps {
   onChaptersFound: (chapters: { title: string; href: string }[]) => void
   currentChapter: string | null
   onAddBookmark: (cfi: string, title: string) => void
+  theme?: string // Add theme prop
 }
 
-export function EpubReader({ file, onChaptersFound, currentChapter, onAddBookmark }: EpubReaderProps) {
+export function EpubReader({ file, onChaptersFound, currentChapter, onAddBookmark, theme }: EpubReaderProps) {
   const readerRef = useRef<HTMLDivElement>(null)
   const bookRef = useRef<Book | null>(null)
   const renditionRef = useRef<Rendition | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Define theme styles
+  const themes = {
+    light: {
+      body: { color: "#000", background: "#fff" },
+      "*::selection": { background: "rgba(0, 123, 255, 0.3)" }, // Example selection style
+    },
+    dark: {
+      body: { color: "#fff", background: "#18181b" }, // Use a dark background
+      "*::selection": { background: "rgba(255, 255, 255, 0.3)" }, // Example selection style for dark
+    },
+  }
 
   useEffect(() => {
     if (!file || !readerRef.current) return
@@ -43,8 +56,8 @@ export function EpubReader({ file, onChaptersFound, currentChapter, onAddBookmar
           if (!isMounted) return
 
           // Get the navigation content from the book
-          await newBook.loaded.navigation;
-          const toc = newBook.navigation.toc;
+          await newBook.loaded.navigation
+          const toc = newBook.navigation.toc
           if (isMounted) {
             onChaptersFound(toc.map((item) => ({ title: item.label.trim(), href: item.href })))
           }
@@ -53,9 +66,17 @@ export function EpubReader({ file, onChaptersFound, currentChapter, onAddBookmar
             width: "100%",
             height: "100%",
             flow: "paginated",
-            spread: "auto",
+            spread: "none", // Force single page view
           })
           renditionRef.current = newRendition
+
+          // Register themes
+          Object.entries(themes).forEach(([name, styles]) => {
+            newRendition.themes.register(name, styles)
+          })
+
+          // Select initial theme
+          newRendition.themes.select(theme === "dark" ? "dark" : "light")
 
           await newRendition.display(currentChapter || undefined)
 
@@ -105,6 +126,12 @@ export function EpubReader({ file, onChaptersFound, currentChapter, onAddBookmar
       renditionRef.current.display(currentChapter)
     }
   }, [currentChapter])
+
+  useEffect(() => {
+    if (renditionRef.current) {
+      renditionRef.current.themes.select(theme === "dark" ? "dark" : "light")
+    }
+  }, [theme])
 
   return (
     <div className="relative w-full h-full">

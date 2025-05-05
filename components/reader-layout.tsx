@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
+import { useTheme } from "next-themes" // Import useTheme
 import { Button } from "@/components/ui/button"
 import { OptionsSidebar } from "@/components/options-sidebar"
 import { ChapterNavigation } from "@/components/chapter-navigation"
@@ -30,6 +31,7 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
     fontFamily: "Inter",
   })
 
+  const { theme } = useTheme() // Get the current theme
   const isDesktop = useMediaQuery("(min-width: 768px)")
 
   useEffect(() => {
@@ -60,16 +62,15 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background"> {/* Removed relative */}
-      {/* Sidebar */}
+    <div className="flex h-screen overflow-hidden bg-background">
+      {/* Options Sidebar */}
       <aside
         className={cn(
-          "h-full transition-all duration-200 ease-in-out border-r border-border bg-background overflow-y-auto", // Removed absolute, translate-x. Added transition-all, overflow-y-auto
-          sidebarOpen ? "w-64 p-4" : "w-0 p-0 border-none", // Conditional width and padding
-          !sidebarOpen && "hidden md:block md:w-0 md:p-0 md:border-none" // Hide completely on mobile when closed, keep structure on desktop
+          "h-full transition-all duration-200 ease-in-out border-r border-border bg-background overflow-y-auto",
+          sidebarOpen ? "w-64 p-4" : "w-0 p-0 border-none",
+          !sidebarOpen && "hidden md:block md:w-0 md:p-0 md:border-none"
         )}
       >
-        {/* Only render content if sidebar should be visible (avoids padding/content issues when w-0) */}
         {sidebarOpen && (
           <OptionsSidebar
             options={readerOptions}
@@ -83,7 +84,7 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
 
       {/* Main content */}
       <div className={cn(
-        "flex flex-col flex-1 h-full overflow-hidden" // Removed transition-all and conditional margin
+        "flex flex-col flex-1 h-full overflow-hidden"
       )}>
         {/* Header */}
         <header className="flex items-center justify-between p-4 border-b border-border">
@@ -96,10 +97,11 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
           <ThemeToggle />
         </header>
 
-        {/* Reader content */}
-        <div className="flex flex-col flex-1 overflow-hidden">
-          {/* Chapter navigation */}
-          <div className="p-4 border-b border-border">
+        {/* Reader Area (including Chapters and Content) */}
+        <div className="flex flex-1 overflow-hidden"> {/* Added flex here */}
+          {/* Chapter List Panel (New) */}
+          <div className="w-64 h-full border-r border-border bg-background overflow-y-auto p-4 flex-shrink-0">
+            <h2 className="text-lg font-semibold mb-4">Chapters</h2>
             <ChapterNavigation
               chapters={chapters}
               currentChapter={currentChapter}
@@ -107,9 +109,9 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
             />
           </div>
 
-          {/* Reader */}
+          {/* Reader Content Area */}
           <div
-            className="flex-1 overflow-auto p-4"
+            className="flex-1 overflow-auto p-4" // Takes remaining space
             style={{
               fontSize: `${readerOptions.fontSize}px`,
               filter: `brightness(${readerOptions.brightness}%) contrast(${readerOptions.contrast}%)`,
@@ -117,6 +119,7 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
               fontFamily: readerOptions.fontFamily,
             }}
           >
+            {/* Reader Components */}
             {fileType === "text" && (
               <TextReader
                 file={file}
@@ -131,6 +134,7 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
                 onChaptersFound={setChapters}
                 currentChapter={currentChapter}
                 onAddBookmark={addBookmark}
+                theme={theme} // Pass theme as a prop
               />
             )}
             {fileType === "pdf" && (
