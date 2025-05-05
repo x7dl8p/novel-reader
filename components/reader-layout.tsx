@@ -108,7 +108,7 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
         <div className="flex flex-1 overflow-hidden">
           {/* Chapter List Panel */}
             <div className="w-64 h-[90vh] ml-4 border rounded-lg bg-background p-2 flex-shrink-0 my-4">
-            <h2 className="text-lg font-semibold mb-4">Chapters</h2>
+            {/* <h2 className="text-lg font-semibold mb-4">Chapters</h2> */}
             <ChapterNavigation
               chapters={chapters}
               currentChapter={currentChapter}

@@ -123,3 +123,21 @@
   margin-bottom: 1em;
   line-height: 1.6;
 }
+
+/* Global scrollbar styles */
+::-webkit-scrollbar {
+  width: 3px; /* Thin scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* Transparent track */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #888; /* Gray thumb */
+  border-radius: 0.25rem; /* Rounded corners */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555; /* Darker gray on hover */
+}
