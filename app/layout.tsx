@@ -7,7 +7,6 @@ import { FontPreloader } from "@/components/font-preloader"
 export const metadata: Metadata = {
   title: "Novle Reader",
   description: "A minimal novel reader for text, EPUB, and PDF files",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({
