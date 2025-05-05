@@ -105,10 +105,9 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
           <ThemeToggle />
         </header>
 
-        {/* Reader Area (including Chapters and Content) */}
         <div className="flex flex-1 overflow-hidden">
           {/* Chapter List Panel */}
-          <div className="w-64 h-full border-r border-border bg-background p-4 flex-shrink-0 overflow-y-auto">
+          <div className="w-64 h-full border-r border-border bg-background p-2 flex-shrink-0">
             <h2 className="text-lg font-semibold mb-4">Chapters</h2>
             <ChapterNavigation
               chapters={chapters}
