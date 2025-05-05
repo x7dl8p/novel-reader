@@ -111,7 +111,7 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
 
           {/* Reader Content Area */}
           <div
-            className="flex-1 overflow-auto p-4" // Takes remaining space
+            className="flex-1 overflow-auto overflow-x-hidden"
             style={{
               fontSize: `${readerOptions.fontSize}px`,
               filter: `brightness(${readerOptions.brightness}%) contrast(${readerOptions.contrast}%)`,
