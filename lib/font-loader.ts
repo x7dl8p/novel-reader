@@ -6,6 +6,7 @@
  */
 export async function loadFont(fontFamily: string, url: string): Promise<FontFace> {
   try {
+    console.log(`Loading font "${fontFamily}" from "${url}"`)
     // Create a new FontFace object
     const font = new FontFace(fontFamily, `url(${url})`)
 
@@ -46,7 +47,7 @@ export async function preloadDefaultFonts(): Promise<void> {
 
       if (!isLoaded) {
         // Load the font from our local files
-        await loadFont(family, `/fonts/${family.toLowerCase().replace(/\s+/g, "-")}.woff2`)
+        await loadFont(family, `/public/fonts/${family.toLowerCase().replace(/\s+/g, "-")}.woff2`)
         console.log(`Preloaded font: ${family}`)
       }
     }

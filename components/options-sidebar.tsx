@@ -9,15 +9,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { FontManager } from "@/components/font-manager"
 
+interface Options {
+  fontSize: number
+  brightness: number
+  contrast: number
+  padding: number
+  fontFamily: string
+}
+
 interface OptionsSidebarProps {
-  options: {
-    fontSize: number
-    brightness: number
-    contrast: number
-    padding: number
-    fontFamily: string
-  }
-  onOptionsChange: (options: Partial<typeof options>) => void
+  options: Options
+  onOptionsChange: (options: Partial<Options>) => void
   bookmarks: { cfi: string; title: string; timestamp: number }[]
   onBookmarkRemove: (timestamp: number) => void
   onClose: () => void
@@ -54,7 +56,7 @@ export function OptionsSidebar({
   }
 
   return (
-    <div className="flex flex-col h-full bg-background border-r border-border">
+    <div className="flex flex-col h-full bg-background border-r border-border w-80">
       <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="text-xl font-semibold">Options</h2>
         <Button variant="ghost" size="icon" onClick={onClose}>

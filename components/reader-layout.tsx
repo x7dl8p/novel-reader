@@ -39,6 +39,7 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
   }, [isDesktop])
 
   const toggleSidebar = () => {
+    console.log("toggleSidebar clicked, sidebarOpen:", !sidebarOpen);
     setSidebarOpen(!sidebarOpen)
   }
 
@@ -59,25 +60,31 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-background"> {/* Removed relative */}
       {/* Sidebar */}
-      <div
+      <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 ease-in-out md:relative",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full md:w-0",
+          "h-full transition-all duration-200 ease-in-out border-r border-border bg-background overflow-y-auto", // Removed absolute, translate-x. Added transition-all, overflow-y-auto
+          sidebarOpen ? "w-64 p-4" : "w-0 p-0 border-none", // Conditional width and padding
+          !sidebarOpen && "hidden md:block md:w-0 md:p-0 md:border-none" // Hide completely on mobile when closed, keep structure on desktop
         )}
       >
-        <OptionsSidebar
-          options={readerOptions}
-          onOptionsChange={updateReaderOptions}
-          bookmarks={bookmarks}
-          onBookmarkRemove={removeBookmark}
-          onClose={() => setSidebarOpen(false)}
-        />
-      </div>
+        {/* Only render content if sidebar should be visible (avoids padding/content issues when w-0) */}
+        {sidebarOpen && (
+          <OptionsSidebar
+            options={readerOptions}
+            onOptionsChange={updateReaderOptions}
+            bookmarks={bookmarks}
+            onBookmarkRemove={removeBookmark}
+            onClose={() => setSidebarOpen(false)}
+          />
+        )}
+      </aside>
 
       {/* Main content */}
-      <div className="flex flex-col flex-1 h-full overflow-hidden">
+      <div className={cn(
+        "flex flex-col flex-1 h-full overflow-hidden" // Removed transition-all and conditional margin
+      )}>
         {/* Header */}
         <header className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center">
@@ -138,5 +145,5 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
