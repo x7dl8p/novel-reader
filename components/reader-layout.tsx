@@ -84,7 +84,7 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
 
       {/* Main content */}
       <div className={cn(
-        "flex flex-col flex-1 h-full overflow-hidden"
+        "flex flex-col flex-1 h-full" // Removed overflow-hidden
       )}>
         {/* Header */}
         <header className="flex items-center justify-between p-4 border-b border-border">
@@ -98,9 +98,9 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
         </header>
 
         {/* Reader Area (including Chapters and Content) */}
-        <div className="flex flex-1 overflow-hidden"> {/* Added flex here */}
+        <div className="flex flex-1 overflow-hidden"> {/* Re-added overflow-hidden */}
           {/* Chapter List Panel (New) */}
-          <div className="w-64 h-full border-r border-border bg-background overflow-y-auto p-4 flex-shrink-0">
+          <div className="w-64 h-full border-r border-border bg-background p-4 flex-shrink-0">
             <h2 className="text-lg font-semibold mb-4">Chapters</h2>
             <ChapterNavigation
               chapters={chapters}
