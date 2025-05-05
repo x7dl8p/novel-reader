@@ -22,7 +22,6 @@ interface OptionsSidebarProps {
   onOptionsChange: (options: Partial<Options>) => void
   bookmarks: { cfi: string; title: string; timestamp: number }[]
   onBookmarkRemove: (timestamp: number) => void
-  onClose: () => void
 }
 
 const DEFAULT_FONTS = [
@@ -43,7 +42,6 @@ export function OptionsSidebar({
   onOptionsChange,
   bookmarks,
   onBookmarkRemove,
-  onClose,
 }: OptionsSidebarProps) {
   const [availableFonts, setAvailableFonts] = useState<Array<{ name: string; value: string }>>(DEFAULT_FONTS)
 
@@ -59,9 +57,6 @@ export function OptionsSidebar({
     <div className="flex flex-col h-full bg-background border-r border-border w-80">
       <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="text-xl font-semibold">Options</h2>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="h-5 w-5" />
-        </Button>
       </div>
 
       <Tabs defaultValue="options" className="flex-1">

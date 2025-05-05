@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Menu, X } from "lucide-react"
-import { useTheme } from "next-themes" // Import useTheme
+import { useState } from "react"
+import { Menu } from "lucide-react"
+import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
-import { OptionsSidebar } from "@/components/options-sidebar"
 import { ChapterNavigation } from "@/components/chapter-navigation"
 import { TextReader } from "@/components/readers/text-reader"
 import { EpubReader } from "@/components/readers/epub-reader"
@@ -12,6 +11,12 @@ import { PdfReader } from "@/components/readers/pdf-reader"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { cn } from "@/lib/utils"
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+} from "@/components/ui/dialog"
+import { OptionsSidebar } from "@/components/options-sidebar"
 
 interface ReaderLayoutProps {
   file: File
@@ -19,31 +24,19 @@ interface ReaderLayoutProps {
 }
 
 export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [chapters, setChapters] = useState<{ title: string; href: string }[]>([])
   const [currentChapter, setCurrentChapter] = useState<string | null>(null)
   const [bookmarks, setBookmarks] = useState<{ cfi: string; title: string; timestamp: number }[]>([])
   const [readerOptions, setReaderOptions] = useState({
     fontSize: 16,
     brightness: 100,
-    contrast: 100,
+    contrast: 100, // Changed from 150 to a more moderate default
     padding: 16,
     fontFamily: "Inter",
   })
 
-  const { theme } = useTheme() // Get the current theme
+  const { theme } = useTheme()
   const isDesktop = useMediaQuery("(min-width: 768px)")
-
-  useEffect(() => {
-    if (!isDesktop) {
-      setSidebarOpen(false)
-    }
-  }, [isDesktop])
-
-  const toggleSidebar = () => {
-    console.log("toggleSidebar clicked, sidebarOpen:", !sidebarOpen);
-    setSidebarOpen(!sidebarOpen)
-  }
 
   const handleChapterChange = (chapterId: string) => {
     setCurrentChapter(chapterId)
@@ -61,46 +54,61 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
     setReaderOptions({ ...readerOptions, ...options })
   }
 
+  // Different styles based on reader type
+  const getReaderContentStyles = () => {
+    if (fileType === "epub") {
+      // For EPUB, minimal styling as the renderer handles it
+      return {
+        display: "flex",
+        flexDirection: "column" as const,
+        height: "100%",
+        filter: `brightness(${readerOptions.brightness}%) contrast(${readerOptions.contrast}%)`
+      }
+    } else {
+      // For text and PDF
+      return {
+        fontSize: `${readerOptions.fontSize}px`,
+        filter: `brightness(${readerOptions.brightness}%) contrast(${readerOptions.contrast}%)`,
+        fontFamily: readerOptions.fontFamily,
+        textAlign: "left" as const,
+        padding: `${readerOptions.padding}px`,
+        maxWidth: "800px",
+        margin: "0 auto",
+      }
+    }
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Options Sidebar */}
-      <aside
-        className={cn(
-          "h-full transition-all duration-200 ease-in-out border-r border-border bg-background overflow-y-auto",
-          sidebarOpen ? "w-64 p-4" : "w-0 p-0 border-none",
-          !sidebarOpen && "hidden md:block md:w-0 md:p-0 md:border-none"
-        )}
-      >
-        {sidebarOpen && (
-          <OptionsSidebar
-            options={readerOptions}
-            onOptionsChange={updateReaderOptions}
-            bookmarks={bookmarks}
-            onBookmarkRemove={removeBookmark}
-            onClose={() => setSidebarOpen(false)}
-          />
-        )}
-      </aside>
-
       {/* Main content */}
-      <div className={cn(
-        "flex flex-col flex-1 h-full" // Removed overflow-hidden
-      )}>
+      <div className="flex flex-col flex-1 h-full">
         {/* Header */}
         <header className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center">
-            <Button variant="ghost" size="icon" onClick={toggleSidebar}>
-              {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-            <h1 className="ml-2 text-xl font-semibold">Novle Reader</h1>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <OptionsSidebar
+                  options={readerOptions}
+                  onOptionsChange={updateReaderOptions}
+                  bookmarks={bookmarks}
+                  onBookmarkRemove={removeBookmark}
+                />
+              </DialogContent>
+            </Dialog>
+            <h1 className="ml-2 text-xl font-semibold">Novel Reader</h1>
           </div>
           <ThemeToggle />
         </header>
 
         {/* Reader Area (including Chapters and Content) */}
-        <div className="flex flex-1 overflow-hidden"> {/* Re-added overflow-hidden */}
-          {/* Chapter List Panel (New) */}
-          <div className="w-64 h-full border-r border-border bg-background p-4 flex-shrink-0">
+        <div className="flex flex-1 overflow-hidden">
+          {/* Chapter List Panel */}
+          <div className="w-64 h-full border-r border-border bg-background p-4 flex-shrink-0 overflow-y-auto">
             <h2 className="text-lg font-semibold mb-4">Chapters</h2>
             <ChapterNavigation
               chapters={chapters}
@@ -111,13 +119,8 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
 
           {/* Reader Content Area */}
           <div
-            className="flex-1 overflow-auto overflow-x-hidden"
-            style={{
-              fontSize: `${readerOptions.fontSize}px`,
-              filter: `brightness(${readerOptions.brightness}%) contrast(${readerOptions.contrast}%)`,
-              padding: `${readerOptions.padding}px`,
-              fontFamily: readerOptions.fontFamily,
-            }}
+            className="flex-1 overflow-y-auto overflow-x-hidden"
+            style={getReaderContentStyles()}
           >
             {/* Reader Components */}
             {fileType === "text" && (
@@ -134,7 +137,7 @@ export function ReaderLayout({ file, fileType }: ReaderLayoutProps) {
                 onChaptersFound={setChapters}
                 currentChapter={currentChapter}
                 onAddBookmark={addBookmark}
-                theme={theme} // Pass theme as a prop
+                theme={theme}
               />
             )}
             {fileType === "pdf" && (

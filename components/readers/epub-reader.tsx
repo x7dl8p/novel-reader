@@ -10,7 +10,7 @@ interface EpubReaderProps {
   onChaptersFound: (chapters: { title: string; href: string }[]) => void
   currentChapter: string | null
   onAddBookmark: (cfi: string, title: string) => void
-  theme?: string // Add theme prop
+  theme?: string
 }
 
 export function EpubReader({ file, onChaptersFound, currentChapter, onAddBookmark, theme }: EpubReaderProps) {
@@ -22,12 +22,32 @@ export function EpubReader({ file, onChaptersFound, currentChapter, onAddBookmar
   // Define theme styles
   const themes = {
     light: {
-      body: { color: "#000", background: "#fff" },
-      "*::selection": { background: "rgba(0, 123, 255, 0.3)" }, // Example selection style
+      body: { 
+        color: "#000", 
+        background: "#fff",
+        padding: "0 20px", // Add padding inside EPUB pages
+      },
+      "p, div": {
+        "max-width": "100%",
+        "text-align": "left",
+        "word-break": "normal",
+        "overflow-wrap": "break-word",
+      },
+      "*::selection": { background: "rgba(0, 123, 255, 0.3)" },
     },
     dark: {
-      body: { color: "#fff", background: "#18181b" }, // Use a dark background
-      "*::selection": { background: "rgba(255, 255, 255, 0.3)" }, // Example selection style for dark
+      body: { 
+        color: "#fff", 
+        background: "#18181b",
+        padding: "0 20px", // Add padding inside EPUB pages
+      },
+      "p, div": {
+        "max-width": "100%",
+        "text-align": "left",
+        "word-break": "normal",
+        "overflow-wrap": "break-word",
+      },
+      "*::selection": { background: "rgba(255, 255, 255, 0.3)" },
     },
   }
 
@@ -62,11 +82,12 @@ export function EpubReader({ file, onChaptersFound, currentChapter, onAddBookmar
             onChaptersFound(toc.map((item) => ({ title: item.label.trim(), href: item.href })))
           }
 
+          // Important: Set specific dimensions for the rendition
           const newRendition = newBook.renderTo(readerElement, {
-            width: "100%",
+            width: "100%", 
             height: "100%",
-            flow: "paginated",
-            spread: "none", // Force single page view
+            flow: "scrolled-doc",
+            spread: "none",
           })
           renditionRef.current = newRendition
 
@@ -134,13 +155,20 @@ export function EpubReader({ file, onChaptersFound, currentChapter, onAddBookmar
   }, [theme])
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full flex items-center justify-center">
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
           <p>Loading EPUB...</p>
         </div>
       )}
-      <div ref={readerRef} className="w-full h-full epub-container"></div>
+      <div 
+        ref={readerRef} 
+        className="epub-container overflow-y-auto w-full h-full"
+        style={{
+          maxWidth: "800px",
+          margin: "0 auto",
+        }}
+      ></div>
     </div>
   )
 }
